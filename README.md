@@ -3,7 +3,7 @@ Package to generate reports with massive amount of data in Laravel.
 
 # Benchmarking
 
-Currently this package only supports exporting CSV file formats, and has been tested exporting 80k entries with relationships taking around 7 seconds to do so.
+Currently this package only supports exporting CSV file formats, and has been tested exporting 80k rows from database with relationships taking around 7 seconds to do so.
 
 # Installation
 
