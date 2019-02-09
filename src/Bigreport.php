@@ -78,7 +78,7 @@ class Bigreport
      * @param array $headings Array with column and corresponding header text relations
      * @param int $chunkSize Chunk size
      */
-    public function __construct(Builder $eloquentBuilder, string $filename = '', array $headings = [], int $chunkSize = 1000)
+    public function __construct(EloquentBuilder $eloquentBuilder, string $filename = '', array $headings = [], int $chunkSize = 1000)
     {
         $this->eloquentBuilder = $eloquentBuilder;
         $this->queryBuilder = $this->eloquentBuilder->getQuery();
