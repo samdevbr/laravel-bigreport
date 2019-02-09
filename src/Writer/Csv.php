@@ -26,7 +26,7 @@ class Csv extends BaseWriter
 
         foreach ($row as $value) {
             $rawRow .= $this->enclosure;
-            $rawRow .= trim($value);
+            $rawRow .= @iconv('ISO-8859-1', 'UTF-8', $value);
             $rawRow .= $this->enclosure;
 
             if ($value !== $lastValue) {
