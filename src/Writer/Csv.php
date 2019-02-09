@@ -1,48 +1,47 @@
 <?php
 namespace Samdevbr\Bigreport\Writer;
-
 class Csv extends BaseWriter
 {
     private $delimiter;
     private $enclosure;
     private $lineEnding;
 
-    public function __construct()
+    public function loadConfig()
     {
         $this->delimiter = config('bigreport.csv.delimiter');
         $this->enclosure = config('bigreport.csv.enclosure');
         $this->lineEnding = config('bigreport.csv.line_ending');
     }
 
-    public function setHeading(array $headings)
+    public function close()
     {
-        $this->addRow($headings);
+        if (!is_null($this->resource)) {
+            fclose($this->resource);
+        }
     }
 
-    public function addRow(array $row)
+    private function parseRow(array $row)
     {
-        $rawRow = '';
-        $lastValue = last($row);
-
+        $values = [];
+        
         foreach ($row as $value) {
-            $rawRow .= $this->enclosure;
-            $rawRow .= @iconv('ISO-8859-1', 'UTF-8', $value);
-            $rawRow .= $this->enclosure;
-
-            if ($value !== $lastValue) {
-                $rawRow .= $this->delimiter;
-            }
+            $values[] = $this->enclosure.$value.$this->enclosure;
         }
 
-        $rawRow .= $this->lineEnding;
-
-        fwrite($this->fileHandle, $rawRow);
+        return implode($this->delimiter, $values).$this->lineEnding;
     }
 
-    public function addRows(array $rows)
+    public function write(array $row)
     {
-        foreach ($rows as $row) {
-            $this->addRow($row);
+        if (is_null($this->resource)) {
+            $this->resource = fopen(storage_path($this->filename), 'w+');
         }
+
+        fwrite($this->resource, $this->parseRow($row));
+    }
+
+    public function writeHeaders(array $headers)
+    {
+        $this->write($headers);
     }
 }
