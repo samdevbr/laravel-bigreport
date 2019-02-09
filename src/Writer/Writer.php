@@ -5,42 +5,66 @@ use Samdevbr\Bigreport\Concerns\Writer;
 abstract class BaseWriter implements Writer
 {
     /**
-     * File handle that will hold the report
-     * file
-     *
-     * @var resource $fileHandle
+     * Constante with all supported report types
      */
-    protected $fileHandle;
+    const TYPES = [
+        'csv' => Csv::class
+    ];
 
     /**
-     * Filename for the report
-     * 
      * @var string $filename
-     */  
-    public $filename;
+     */
+    protected $filename;
 
-    public function openHandle()
+    /**
+     * @var resource|null $resource
+     */
+    protected $resource = null;
+
+    protected function setFilename(string $filename)
     {
-        $this->fileHandle = fopen(storage_path($this->filename), 'w+');
+        $this->filename = $filename;
     }
 
-    public function closeHandle()
-    {
-        fclose($this->fileHandle);
-    }
-
-    public function setHeading(array $headings)
+    public function loadConfig()
     {
         //
     }
 
-    public function addRow(array $row)
+    public function write(array $row)
     {
         //
     }
 
-    public function addRows(array $rows)
+    public function close()
     {
         //
+    }
+
+    public function writeHeaders(array $headers)
+    {
+        //
+    }
+
+    private static function getExtension($filename)
+    {
+        return last(explode('.', $filename));
+    }
+
+    /**
+     * Create a new writer instance
+     *
+     * @return Writer
+     */
+    public static function make(string $filename)
+    {
+        $extension = static::getExtension($filename);
+
+        $writer = app(static::TYPES[$extension]);
+        $writer->setFilename($filename);
+
+        $writer->loadConfig();
+
+        return $writer;
     }
 }

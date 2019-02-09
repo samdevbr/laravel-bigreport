@@ -3,6 +3,7 @@ namespace Samdevbr\Bigreport;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Database\Eloquent\Builder;
+use Samdevbr\Bigreport\Fields\FieldCollection;
 
 class BigreportServiceProvider extends ServiceProvider
 {
@@ -19,10 +20,8 @@ class BigreportServiceProvider extends ServiceProvider
 
         $this->mergeConfigFrom(__DIR__.'/../config/bigreport.php', 'bigreport');
 
-        Builder::macro('export', function (string $filename, array $headings, int $chunkSize = 1000) {
-            $bigReport = new Bigreport($this, $filename, $headings, $chunkSize);
-
-            return $bigReport->export();
+        Builder::macro('export', function (FieldCollection $fieldCollection, int $chunkSize = 1000) {
+            return Export::make($this, $fieldCollection, $chunkSize);
         });
     }
 }

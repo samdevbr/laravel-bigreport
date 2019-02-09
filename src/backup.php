@@ -1,15 +1,4 @@
 <?php
-namespace Samdevbr\Bigreport;
-
-use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
-use Illuminate\Database\Query\Builder as QueryBuilder;
-use Samdevbr\Bigreport\Writer\BaseWriter as Writer;
-use Illuminate\Support\Str;
-use Illuminate\Routing\ResponseFactory;
-use Illuminate\Database\Eloquent\Relations\Relation;
-
-class Bigreport
-{
     /**
      * Eloquent Builder with applied conditions
      *
@@ -58,7 +47,7 @@ class Bigreport
      * @var Writer $writer
      */
     private $writer;
-    
+
     /**
      * Parsed columns from headings
      * 
@@ -83,7 +72,7 @@ class Bigreport
     {
         $this->eloquentBuilder = $eloquentBuilder;
         $this->queryBuilder = $this->eloquentBuilder->getQuery();
-        $this->filename = empty($filename) ? time().'.csv' : $filename;
+        $this->filename = empty($filename) ? time() . '.csv' : $filename;
         $this->headings = $headings;
         $this->chunkSize = $chunkSize;
 
@@ -98,7 +87,7 @@ class Bigreport
      * file extension
      *
      * @return void
-     */ 
+     */
     private function validateFilename()
     {
         $filenameParts = explode('.', $this->filename);
@@ -113,7 +102,7 @@ class Bigreport
         $extension = strtolower($extension);
 
         if (!isset($this->writers[$extension])) {
-            throw new \Exception("Bigexport library does not support .{$extension} yet.");
+            throw new \Exception("Bigreport library does not support .{$extension} yet.");
         }
 
         $writerClass = $this->writers[$extension];
@@ -236,9 +225,9 @@ class Bigreport
      * Map eloquent relationships and return
      * array with key and value for the
      * relationship
-     * 
+     *
      * @return array
-     */  
+     */
     private function getRelationsFromModel($model)
     {
         $relations = [];
@@ -262,7 +251,7 @@ class Bigreport
     /**
      * Proccess the export for given Eloquent Model
      *
-     * @return Bigreport
+     * @return Export
      */
     public function export()
     {
@@ -321,9 +310,8 @@ class Bigreport
      * Return the filepath for the report
      * 
      * @return string
-     */ 
+     */
     public function path()
     {
         return $this->writer->filename;
     }
-}
