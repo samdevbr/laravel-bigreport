@@ -172,7 +172,9 @@ class Bigreport
             return !Str::contains($key, '.');
         });
 
-        $this->columns = array_values($columns);
+        foreach ($columns as $column) {
+            $this->columns[] = $this->headings[$column];
+        }
 
         $this->queryBuilder->select($columns);
         $this->eloquentBuilder->setQuery($this->queryBuilder);
