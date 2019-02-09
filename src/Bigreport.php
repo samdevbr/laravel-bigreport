@@ -3,7 +3,7 @@ namespace Samdevbr\Bigreport;
 
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Query\Builder as QueryBuilder;
-use Samdevbr\Bigreport\Writer\Writer;
+use Samdevbr\Bigreport\Writer\BaseWriter as Writer;
 use Illuminate\Support\Str;
 use Illuminate\Routing\ResponseFactory;
 
@@ -117,9 +117,7 @@ class Bigreport
 
         $this->writer = $writer;
 
-        if ($this->writer->requiresFilename) {
-            $this->writer->filename = $this->filename;
-        }
+        $this->writer->filename = $this->filename;
     }
 
     private function hasHeadings()
@@ -202,6 +200,8 @@ class Bigreport
 
     public function export()
     {
+        $this->writer->openHandle();
+
         if ($this->hasHeadings()) {
             $this->parseColumns();
             $this->parseRelations();
@@ -211,7 +211,7 @@ class Bigreport
 
         $attributes = array_keys($this->headings);
 
-        $this->eloquentBuilder->chunk($this->chunkSize, function ($models) {
+        $this->eloquentBuilder->chunk($this->chunkSize, function ($models) use ($attributes) {
             $rows = [];
 
             foreach ($models as $model) {
@@ -231,13 +231,17 @@ class Bigreport
             $this->writer->addRows($rows);
         });
 
+        $this->writer->closeHandle();
+
         return $this;
     }
 
     public function download()
     {
-        return ResponseFactory::download(
-            $this->writer->filename,
+        $responseFactory = app()->make(ResponseFactory::class);
+
+        return $responseFactory->download(
+            storage_path($this->writer->filename),
             $this->filename
         )->deleteFileAfterSend();
     }

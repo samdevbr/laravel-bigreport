@@ -2,21 +2,19 @@
 namespace Samdevbr\Bigreport\Writer;
 
 use Samdevbr\Bigreport\Concerns\Writer;
-
-abstract class Writer implements Writer
+abstract class BaseWriter implements Writer
 {
-    public $requiresFilename = false;
+    protected $fileHandle;
     public $filename;
 
-    protected $fileHandle;
-
-    public function __construct()
+    public function openHandle()
     {
-        if ($this->requiresFilename) {
-            $this->filename = storage_path($this->filename);
+        $this->fileHandle = fopen(storage_path($this->filename), 'w+');
+    }
 
-            $this->fileHandle = fopen($this->filename, 'w+');
-        }
+    public function closeHandle()
+    {
+        fclose($this->fileHandle);
     }
 
     public function setHeading(array $headings)
@@ -32,10 +30,5 @@ abstract class Writer implements Writer
     public function addRows(array $rows)
     {
         //
-    }
-
-    public function __destruct()
-    {
-        fclose($this->fileHandle);
     }
 }

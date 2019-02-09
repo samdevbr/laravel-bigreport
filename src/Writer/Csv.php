@@ -1,18 +1,14 @@
 <?php
 namespace Samdevbr\Bigreport\Writer;
 
-class Csv extends Writer
+class Csv extends BaseWriter
 {
     private $delimiter;
     private $enclosure;
     private $lineEnding;
 
-    public $requiresFilename = true;
-
     public function __construct()
     {
-        parent::__construct();
-
         $this->delimiter = config('bigreport.csv.delimiter');
         $this->enclosure = config('bigreport.csv.enclosure');
         $this->lineEnding = config('bigreport.csv.line_ending');
