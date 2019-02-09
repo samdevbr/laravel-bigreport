@@ -157,29 +157,6 @@ class Bigreport
         return count($this->relations) > 0;
     }
 
-    /**
-     * Override select clause to avoid
-     * unnecessary columns in the
-     * query
-     *
-     * @return array
-     */
-    private function parseColumns()
-    {
-        $keys = array_keys($this->headings);
-
-        $columns = array_filter($keys, function ($key) {
-            return !Str::contains($key, '.');
-        });
-
-        foreach ($columns as $column) {
-            $this->columns[] = $this->headings[$column];
-        }
-
-        $this->queryBuilder->select($columns);
-        $this->eloquentBuilder->setQuery($this->queryBuilder);
-    }
-
     private function getRelationsFromModel($model)
     {
         $relations = [];
@@ -205,7 +182,7 @@ class Bigreport
         $this->writer->openHandle();
 
         if ($this->hasHeadings()) {
-            $this->parseColumns();
+            $this->columns = array_values($this->headings);
             $this->parseRelations();
 
             $this->writer->setHeading($this->columns);
