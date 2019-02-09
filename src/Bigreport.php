@@ -6,6 +6,7 @@ use Illuminate\Database\Query\Builder as QueryBuilder;
 use Samdevbr\Bigreport\Writer\BaseWriter as Writer;
 use Illuminate\Support\Str;
 use Illuminate\Routing\ResponseFactory;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 class Bigreport
 {
@@ -78,7 +79,7 @@ class Bigreport
      * @param array $headings Array with column and corresponding header text relations
      * @param int $chunkSize Chunk size
      */
-    public function __construct(EloquentBuilder $eloquentBuilder, string $filename = '', array $headings = [], int $chunkSize = 1000)
+    public function __construct(EloquentBuilder $eloquentBuilder, string $filename, array $headings, int $chunkSize = 1000)
     {
         $this->eloquentBuilder = $eloquentBuilder;
         $this->queryBuilder = $this->eloquentBuilder->getQuery();
@@ -91,6 +92,13 @@ class Bigreport
         $this->validateFilename();
     }
 
+    /**
+     * Validate given filename and create
+     * correct writer for the given
+     * file extension
+     *
+     * @return void
+     */ 
     private function validateFilename()
     {
         $filenameParts = explode('.', $this->filename);
@@ -120,12 +128,56 @@ class Bigreport
         $this->writer->filename = $this->filename;
     }
 
+    /**
+     * Verify if export has headings
+     *
+     * @return bool
+     */
     private function hasHeadings()
     {
         return count($this->headings) > 0;
     }
 
-    // Load eloquent relationships
+    /**
+     * Parse main model columns by selecting
+     * only necessary columns to avoid
+     * uneeded columns in the query
+     *
+     * @return void
+     */
+    private function parseColumns()
+    {
+        $keys = array_keys($this->headings);
+
+        $columns = array_filter($keys, function ($column) {
+            return !Str::contains($column, '.');
+        });
+
+        $this->columns = $columns;
+        $this->queryBuilder->select($this->columns);
+        $this->eloquentBuilder->setQuery($this->queryBuilder);
+    }
+
+    /**
+     * Call the relation method on the model
+     * and return it
+     *
+     * @param string $relation
+     * @return Relation
+     */
+    private function getRelation($relation)
+    {
+        return call_user_func([$this->eloquentBuilder->getModel(), $relation]);
+    }
+
+    /**
+     * Parse relationships from model by selecting
+     * only columns that is present in the
+     * headings array to avoid uneeded
+     * columns in the query
+     * 
+     * @return void
+     */
     private function parseRelations()
     {
         $keys = array_keys($this->headings);
@@ -138,25 +190,55 @@ class Bigreport
             return;
         }
 
-        $parsedRelations = [];
+        $relationsToBeLoaded = [];
 
         foreach ($this->relations as $relation) {
-            if (!isset($parsedRelations[$relation])) {
-                $relationParts = explode('.', $relation);
-                $relation = head($relationParts);
+            $relationParts = explode('.', $relation);
+            $methodName = head($relationParts);
+            $relationParts = array_splice($relationParts, 1, count($relationParts));
 
-                $this->eloquentBuilder->with($relation);
+            if (!isset($relationsToBeLoaded[$methodName])) {
+                $relationsToBeLoaded[$methodName] = [$relationParts];
+                continue;
             }
 
-            $parsedRelations[] = $relation;
+            $relationsToBeLoaded[$methodName][] = $relationParts;
+        }
+
+        foreach ($relationsToBeLoaded as $method => $parts) {
+            $relationColumns = array_flatten($parts);
+            $relation = $this->getRelation($method);
+            $relationKeyName = $relation->getRelated()->getKeyName();
+            $relationColumns = implode(',', array_unique(
+                array_merge($relationColumns, [$relationKeyName]),
+                SORT_REGULAR
+            ));
+
+            $selectColumns = $this->queryBuilder->columns;
+            $selectColumns[] = $relationKeyName;
+            $this->queryBuilder->select($selectColumns);
+            $this->eloquentBuilder->with(sprintf("%s:%s", $method, $relationColumns));
+            $this->eloquentBuilder->setQuery($this->queryBuilder);
         }
     }
 
+    /**
+     * Verify if export has relations
+     * 
+     * @return bool
+     */
     private function hasRelations()
     {
         return count($this->relations) > 0;
     }
 
+    /**
+     * Map eloquent relationships and return
+     * array with key and value for the
+     * relationship
+     * 
+     * @return array
+     */  
     private function getRelationsFromModel($model)
     {
         $relations = [];
@@ -177,15 +259,20 @@ class Bigreport
         return $relations;
     }
 
+    /**
+     * Proccess the export for given Eloquent Model
+     *
+     * @return Bigreport
+     */
     public function export()
     {
         $this->writer->openHandle();
 
         if ($this->hasHeadings()) {
-            $this->columns = array_values($this->headings);
+            $this->parseColumns();
             $this->parseRelations();
 
-            $this->writer->setHeading($this->columns);
+            $this->writer->setHeading(array_values($this->headings));
         }
 
         $attributes = array_keys($this->headings);
@@ -215,6 +302,11 @@ class Bigreport
         return $this;
     }
 
+    /**
+     * Download and delete the generated report
+     * 
+     * @return ResponseFactory
+     */
     public function download()
     {
         $responseFactory = app()->make(ResponseFactory::class);
@@ -225,6 +317,11 @@ class Bigreport
         )->deleteFileAfterSend();
     }
 
+    /**
+     * Return the filepath for the report
+     * 
+     * @return string
+     */ 
     public function path()
     {
         return $this->writer->filename;

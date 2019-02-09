@@ -19,7 +19,7 @@ class BigreportServiceProvider extends ServiceProvider
 
         $this->mergeConfigFrom(__DIR__.'/../config/bigreport.php', 'bigreport');
 
-        Builder::macro('export', function (string $filename = '', array $headings = [], int $chunkSize = 1000) {
+        Builder::macro('export', function (string $filename, array $headings, int $chunkSize = 1000) {
             $bigReport = new Bigreport($this, $filename, $headings, $chunkSize);
 
             return $bigReport->export();

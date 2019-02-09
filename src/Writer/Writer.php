@@ -4,7 +4,19 @@ namespace Samdevbr\Bigreport\Writer;
 use Samdevbr\Bigreport\Concerns\Writer;
 abstract class BaseWriter implements Writer
 {
+    /**
+     * File handle that will hold the report
+     * file
+     *
+     * @var resource $fileHandle
+     */
     protected $fileHandle;
+
+    /**
+     * Filename for the report
+     * 
+     * @var string $filename
+     */  
     public $filename;
 
     public function openHandle()
