@@ -2,6 +2,28 @@
 
 This package allows you to quickly export Eloquent models into CSV files.
 
+## Installation
+
+* You can install this package using composer
+`composer require samdevbr/laravel-bigreport`
+* Publish configuration files
+`php artisan vendor:publish --tag=congig`
+* Register the service provider
+```php
+// config/app.php
+
+// ...
+
+Illuminate\View\ViewServiceProvider::class,
+
+/*
+ * Package Service Providers...
+ */
+Samdevbr\Bigreport\BigreportServiceProvider::class,
+
+// ...
+``` 
+
 ## Benchmarking
 
 ### This package has been tested with the following conditions
