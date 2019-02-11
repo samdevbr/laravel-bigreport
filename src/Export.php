@@ -69,7 +69,7 @@ class Export
      *
      * @return void
      */
-    private function generate()
+    public function generate()
     {
         $this->writer->writeHeaders(
             $this->fieldCollection->getHeaders()
@@ -89,6 +89,11 @@ class Export
         });
 
         $this->writer->close();
+    }
+
+    public function getDownloadLink()
+    {
+        return storage_path($this->filename);
     }
 
     /**
