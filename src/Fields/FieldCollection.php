@@ -60,7 +60,7 @@ class FieldCollection extends Collection
             $tempValue = $model->{$field->attribute};
 
             if ($field->isRelation) {
-                $tempValue = $model->{$field->method}->{$field->attribute};
+                $tempValue = $model->{$field->method}->{$field->attribute} ?? '';
             }
 
             $row[] = $field->getValue($tempValue);
