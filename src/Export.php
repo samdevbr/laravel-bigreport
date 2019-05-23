@@ -7,6 +7,9 @@ use Samdevbr\Bigreport\Writer\BaseWriter as Writer;
 use Illuminate\Routing\ResponseFactory;
 use Samdevbr\Bigreport\Eloquent\Parser;
 use Samdevbr\Bigreport\Concerns\ShouldExport;
+use Samdevbr\Bigreport\Concerns\HasAdditionalHeadings;
+use Samdevbr\Bigreport\Concerns\InteractsWithHeader;
+use Samdevbr\Bigreport\Concerns\InteractsWithRows;
 
 class Export
 {
@@ -72,6 +75,24 @@ class Export
         $this->writer = Writer::make($this->filename);
     }
 
+    private function headers()
+    {
+        return $this->fieldCollection->getHeaders();
+    }
+
+    private function hasAdditionalHeadings()
+    {
+        if (!$this->exportHandler instanceof InteractsWithHeader) {
+            return false;
+        }
+
+        if (empty($this->exportHandler->handleHeader($this->headers()))) {
+            return false;
+        }
+
+        return true;
+    }
+
     /**
      * Generate the report
      *
@@ -79,8 +100,14 @@ class Export
      */
     public function generate()
     {
+        $headers = $this->headers();
+
+        if ($this->hasAdditionalHeadings()) {
+            $headers = $this->exportHandler->handleHeader($this->headers());
+        }
+
         $this->writer->writeHeaders(
-            $this->fieldCollection->getHeaders()
+            $headers
         );
 
         Parser::make(
@@ -90,8 +117,14 @@ class Export
 
         $this->builder->chunk($this->chunkSize, function ($models) {
             foreach ($models as $model) {
+                $row = $this->fieldCollection->modelToRow($model);
+
+                if ($this->exportHandler instanceof InteractsWithRows) {
+                    $row = $this->exportHandler->onEachRow($row);
+                }
+
                 $this->writer->write(
-                    $this->fieldCollection->modelToRow($model)
+                    $row
                 );
             }
         });
