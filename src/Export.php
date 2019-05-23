@@ -6,6 +6,7 @@ use Samdevbr\Bigreport\Fields\FieldCollection;
 use Samdevbr\Bigreport\Writer\BaseWriter as Writer;
 use Illuminate\Routing\ResponseFactory;
 use Samdevbr\Bigreport\Eloquent\Parser;
+use Samdevbr\Bigreport\Concerns\ShouldExport;
 
 class Export
 {
@@ -13,6 +14,11 @@ class Export
      * @var Builder $builder
      */
     private $builder;
+
+    /**
+     * @var ShouldExport $exportHandler
+     */
+    private $exportHandler;
 
     /**
      * @var FieldCollection $fieldCollection
@@ -38,15 +44,17 @@ class Export
      * Create a new instance of Export
      * 
      * @param Builder $builder
-     * @param FieldCollection $fieldCollection
-     * @param string $filename
+     * @param ShouldExport $exportHandler
      * @param int $chunkSize
      * @return void
      */
-    public function __construct(Builder $builder, FieldCollection $fieldCollection, int $chunkSize = 1000)
+    public function __construct(Builder $builder, ShouldExport $exportHandler, int $chunkSize = 1000)
     {
         $this->builder = $builder;
-        $this->fieldCollection = $fieldCollection;
+        $this->exportHandler = $exportHandler;
+
+        $this->fieldCollection = FieldCollection::make($this->exportHandler->fields());
+
         $this->filename = time().'.csv';
         $this->chunkSize = $chunkSize;
 
@@ -118,13 +126,12 @@ class Export
      * Create a new export instance
      *
      * @param Builder $builder
-     * @param FieldCollection $fieldCollection
-     * @param string $filename
+     * @param ShouldExport $exportHandler
      * @param int $chunkSize
      * @return static
      */
-    public static function make(Builder $builder, FieldCollection $fieldCollection, int $chunkSize = 1000)
+    public static function make(Builder $builder, ShouldExport $exportHandler, int $chunkSize = 1000)
     {
-        return new static($builder, $fieldCollection, $chunkSize);
+        return new static($builder, $exportHandler, $chunkSize);
     }
 }
