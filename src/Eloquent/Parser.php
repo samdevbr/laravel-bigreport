@@ -50,7 +50,7 @@ class Parser
             $relationString = $method;
 
             $relationModel = $this->builder->getRelation($method);
-            $primaryKey = $relationModel->getRelated()->getKeyName();
+            $primaryKey = $relationModel->getForeignKeyName();
             $hasPrimaryKeyInAttributes = in_array($primaryKey, $attributes);
 
             if (!$hasPrimaryKeyInAttributes) {
