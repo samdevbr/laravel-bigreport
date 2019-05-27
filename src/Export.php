@@ -93,6 +93,17 @@ class Export
         return true;
     }
 
+    private function isHiddenHeaders()
+    {
+        $defaultHidden = false; 
+
+        if (!property_exists($this->exportHandler, 'hiddenHeader')) {
+            return $defaultHidden;
+        }
+
+        return $this->exportHandler->hiddenHeader;
+    }
+
     /**
      * Generate the report
      *
@@ -100,15 +111,9 @@ class Export
      */
     public function generate()
     {
-        $headers = $this->headers();
-
-        if ($this->hasAdditionalHeadings()) {
-            $headers = $this->exportHandler->handleHeader($this->headers());
+        if (!$this->isHiddenHeaders()) {
+            $this->generateHeaders();
         }
-
-        $this->writer->writeHeaders(
-            $headers
-        );
 
         Parser::make(
             $this->builder,
@@ -130,6 +135,19 @@ class Export
         });
 
         $this->writer->close();
+    }
+
+    private function generateHeaders()
+    {
+        $headers = $this->headers();
+
+        if ($this->hasAdditionalHeadings()) {
+            $headers = $this->exportHandler->handleHeader($this->headers());
+        }
+
+        $this->writer->writeHeaders(
+            $headers
+        );
     }
 
     public function getDownloadLink()
