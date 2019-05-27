@@ -100,15 +100,7 @@ class Export
      */
     public function generate()
     {
-        $headers = $this->headers();
-
-        if ($this->hasAdditionalHeadings()) {
-            $headers = $this->exportHandler->handleHeader($this->headers());
-        }
-
-        $this->writer->writeHeaders(
-            $headers
-        );
+        $this->generateHeaders();
 
         Parser::make(
             $this->builder,
@@ -130,6 +122,19 @@ class Export
         });
 
         $this->writer->close();
+    }
+
+    private function generateHeaders()
+    {
+        $headers = $this->headers();
+
+        if ($this->hasAdditionalHeadings()) {
+            $headers = $this->exportHandler->handleHeader($this->headers());
+        }
+
+        $this->writer->writeHeaders(
+            $headers
+        );
     }
 
     public function getDownloadLink()
