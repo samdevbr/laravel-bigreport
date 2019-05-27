@@ -93,6 +93,17 @@ class Export
         return true;
     }
 
+    private function isHiddenHeaders()
+    {
+        $defaultHidden = false; 
+
+        if (!property_exists($this->exportHandler, 'hiddenHeader')) {
+            return $defaultHidden;
+        }
+
+        return $this->exportHandler->hiddenHeader;
+    }
+
     /**
      * Generate the report
      *
@@ -100,7 +111,9 @@ class Export
      */
     public function generate()
     {
-        $this->generateHeaders();
+        if (!$this->isHiddenHeaders()) {
+            $this->generateHeaders();
+        }
 
         Parser::make(
             $this->builder,
