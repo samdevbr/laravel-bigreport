@@ -1,5 +1,6 @@
 <?php
 namespace Samdevbr\Bigreport\Writer;
+
 class Csv extends BaseWriter
 {
     private $delimiter;
@@ -29,8 +30,11 @@ class Csv extends BaseWriter
         }
 
         $value = implode($this->delimiter, $values).$this->lineEnding;
-        
-        return iconv('ISO-8859-1', 'UTF-8', $value);
+
+        $incomingEncode = mb_detect_encoding($value);
+        $value = iconv($incomingEncode, 'UTF-8', $value);
+
+        return Encoding::fixUTF8($value);
     }
 
     public function write(array $row)
