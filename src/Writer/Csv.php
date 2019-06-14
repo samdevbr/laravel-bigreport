@@ -28,7 +28,9 @@ class Csv extends BaseWriter
             $values[] = $this->enclosure.$value.$this->enclosure;
         }
 
-        return implode($this->delimiter, $values).$this->lineEnding;
+        $value = implode($this->delimiter, $values).$this->lineEnding;
+        
+        return iconv('ISO-8859-1', 'UTF-8', $value);
     }
 
     public function write(array $row)
